@@ -1,0 +1,121 @@
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
+const byte addresses [][6] = {"00001"} ;
+RF24 radio(7, 8);
+int datos[3];
+bool directionL;
+bool directionR;
+byte valueL;
+byte valueR; 
+
+int mLeft;
+int mRight;
+
+const int in1 = 3; // direction pin 1
+const int in2 = 4; // direction pin 2
+const int in3 = 5; // direction pin 1
+const int in4 = 6; // direction pin 2
+const int ena = 9; // PWM pin to change speed
+const int enb = 10;
+boolean IsConnect;
+void setup()
+{
+  pinMode(in1, OUTPUT); // connection to L298n
+  pinMode(in2, OUTPUT); // connection to L298n
+  pinMode(ena, OUTPUT); // connection to L298n
+  pinMode(in3, OUTPUT); // connection to L298n
+  pinMode(in4, OUTPUT); // connection to L298n
+  pinMode(enb, OUTPUT); // connection to L298n
+  radio.begin();
+  Serial.begin(9600);
+  radio.openReadingPipe(1, addresses[0]);
+  radio.startListening();
+  radio.setRetries(5, 15);
+}
+
+int MotoL, MotoR;
+int ValStickX, ValStickY;
+
+void loop() {
+  
+  if ( radio.available())
+  {
+    radio.read(datos, sizeof(datos));
+    IsConnect = HIGH;
+  }
+  else{
+    IsConnect = LOW;
+  }
+    int val_x = datos[0];
+    int val_y = datos[1];
+
+    ValStickX = map(val_x, 0, 1023, 252, -252);
+    ValStickY = map(val_y, 0, 1023, 252, -252);
+    //Serial.println(ValStickX);
+
+    if (abs(ValStickX) < 20) {
+      ValStickX = 0;
+    }
+    if (abs(ValStickY) < 20) {
+      ValStickY = 0;
+    }
+
+    MotoL = ValStickY - (ValStickX / 1.2);
+    MotoR = ValStickY + (ValStickX / 1.2);
+   
+    if (IsConnect == LOW){MotoL = 0;}
+    if (IsConnect == LOW){MotoR = 0;}
+    
+    if (MotoL > 255) {
+      MotoL = 255;
+    }
+    if (MotoR > 255) {
+      MotoR = 255;
+    }
+    if (MotoL < -255) {
+      MotoL = -255;
+    }
+    if (MotoR < -255) {
+      MotoR = -255;
+    }
+Serial.println(mLeft);
+  if (MotoL > 0) 
+  {
+    valueL = MotoL;
+    directionL = 0;
+  }
+  else if (MotoL < 0) 
+  {
+    valueL = abs(MotoL);
+    directionL = 1;
+  }
+  else 
+  {
+    directionL = 0;
+    valueL = 0;
+  }
+
+  if (MotoR > 0) {
+    valueR = MotoR;
+    directionR = 0;
+  }
+  else if (MotoR < 0) {
+    valueR = abs(MotoR);
+    directionR = 1;
+  }
+  else {
+    directionR = 0;
+    valueR = 0;
+  }
+
+  
+
+  digitalWrite(in1, directionR);
+  digitalWrite(in2, !directionR);
+  digitalWrite(in3, directionL);
+  digitalWrite(in4, !directionL);
+  analogWrite(ena, valueL);
+  analogWrite(enb, valueR);
+  
+}
