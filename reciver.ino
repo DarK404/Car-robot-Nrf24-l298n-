@@ -23,6 +23,7 @@ int pos;
 int fspeed; 
 int bspeed; 
 int steer;
+
 const int in1 = 2; 
 const int in2 = 9; 
 const int in3 = 4; 
@@ -32,8 +33,8 @@ const int enb = 6;
 byte IsConnect;
 void setup()
 {
-  myServo.attach(9);
-  myServo1.attach(10);
+//  myServo.attach(9);     // Don't use 0 and 1 pins
+//  myServo1.attach(10);
   pinMode(in1, OUTPUT); 
   pinMode(in2, OUTPUT);
   pinMode(ena, OUTPUT); 
@@ -44,7 +45,7 @@ void setup()
   Serial.begin(9600);
   radio.openReadingPipe(1,pipe);
   radio.startListening();
-  radio.setDataRate(RF24_250KBPS);
+//  radio.setDataRate(RF24_250KBPS); // Recommended use of the capacitor in case of activating this function
   radio.setRetries(15, 15);
 }
 
@@ -63,8 +64,8 @@ void loop() {
   }
     int val_x = datos[0];
     int val_y = datos[1];
-    int valS1 = datos[2];
-    int valS2 = datos[3];
+  //  int valS1 = datos[2];
+  //  int valS2 = datos[3];
     valS = map(valS1,0,1023,0,255);
     valS1 = map(valS2,0,1023,0,255);
     ValStickX = map(val_x, 1023, 0, 252, -252);
